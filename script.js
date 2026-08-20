@@ -1,668 +1,475 @@
-// ============================================
-// 1. Particles
-// ============================================
-(function() {
-    console.log('[粒子系统] 初始化粒子动画...');
-    
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
-    let w, h;
-    const particles = [];
-    const COUNT = 70;
+/* =============================================================
+   Stalir Website — 前端交互脚本
+   模块：粒子背景 / 导航 / 滚动显现 / IP 复制 / 服务器状态 /
+         卡片光效 / FAQ 折叠 / 返回顶部 / 整合包版本
+   ============================================================= */
+(function () {
+    'use strict';
 
-    console.log(`[粒子系统] 准备创建 ${COUNT} 个粒子`);
+    /* ---------------------------------------------------------
+       0. 全局配置
+       --------------------------------------------------------- */
+    const CONFIG = {
+        serverIP: 'mc.stalir.cn',
+        serverPort: 25565,
+        // 整合包版本接口（GitHub Releases API）。留空则显示「见 QQ 群」。
+        // 示例：'https://api.github.com/repos/<owner>/<repo>/releases/latest'
+        modpackVersionApi: '',
+        statusRefreshInterval: 60 * 1000 // 服务器状态自动刷新间隔
+    };
 
-    function resize() {
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-        console.log(`[粒子系统] Canvas 尺寸调整: ${w}x${h}`);
-    }
-    window.addEventListener('resize', () => {
-        console.log('[粒子系统] 窗口大小改变，重新调整 Canvas');
-        resize();
-        for (const p of particles) {
-            p.x = Math.random() * w;
-            p.y = Math.random() * h;
-        }
-        console.log('[粒子系统] 粒子位置已重置');
-    });
-    resize();
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    class Particle {
-        constructor() {
-            this.reset();
+    /* 工具：DOM 快捷选择 */
+    const $ = (sel, root) => (root || document).querySelector(sel);
+    const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+    /* ---------------------------------------------------------
+       1. 粒子背景
+       --------------------------------------------------------- */
+    function initParticles() {
+        const canvas = $('#particles');
+        if (!canvas) return;
+        if (prefersReducedMotion) {
+            canvas.remove();
+            return;
         }
-        reset() {
-            this.x = Math.random() * w;
-            this.y = Math.random() * h;
-            this.size = Math.random() * 2 + 0.5;
-            this.speedX = (Math.random() - 0.5) * 0.4;
-            this.speedY = (Math.random() - 0.5) * 0.4;
-            this.opacity = Math.random() * 0.5 + 0.1;
+
+        const ctx = canvas.getContext('2d');
+        let w = 0;
+        let h = 0;
+        let rafId = null;
+        let running = false;
+
+        const COUNT = Math.min(70, Math.floor(window.innerWidth / 16));
+        const particles = [];
+        const MAX_DIST = 140;
+        const MAX_DIST_SQ = MAX_DIST * MAX_DIST;
+        let lastTime = 0;
+
+        function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            w = window.innerWidth;
+            h = window.innerHeight;
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            if (this.x < 0 || this.x > w) this.speedX *= -1;
-            if (this.y < 0 || this.y > h) this.speedY *= -1;
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.size = Math.random() * 1.8 + 0.4;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.speedY = (Math.random() - 0.5) * 0.4;
+                this.opacity = Math.random() * 0.45 + 0.08;
+            }
+            update(dt) {
+                this.x += this.speedX * dt;
+                this.y += this.speedY * dt;
+                // 边界反弹：归位 + 反向，防止粒子卡在角落
+                if (this.x < 0) { this.x = 0; this.speedX = Math.abs(this.speedX); }
+                else if (this.x > w) { this.x = w; this.speedX = -Math.abs(this.speedX); }
+                if (this.y < 0) { this.y = 0; this.speedY = Math.abs(this.speedY); }
+                else if (this.y > h) { this.y = h; this.speedY = -Math.abs(this.speedY); }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(180, 160, 255, ' + this.opacity + ')';
+                ctx.fill();
+            }
         }
-        draw() {
+
+        function drawLines() {
+            ctx.lineWidth = 0.6;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(180, 160, 255, ${this.opacity})`;
-            ctx.fill();
-        }
-    }
-
-    for (let i = 0; i < COUNT; i++) {
-        particles.push(new Particle());
-    }
-    console.log(`[粒子系统] ${COUNT} 个粒子创建完成`);
-
-    function drawLines() {
-        let linesDrawn = 0;
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 140) {
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(180, 160, 255, ${0.08 * (1 - dist / 140)})`;
-                    ctx.lineWidth = 0.6;
-                    ctx.stroke();
-                    linesDrawn++;
+            for (let i = 0; i < particles.length; i++) {
+                const pi = particles[i];
+                for (let j = i + 1; j < particles.length; j++) {
+                    const pj = particles[j];
+                    const dx = pi.x - pj.x;
+                    const dy = pi.y - pj.y;
+                    const distSq = dx * dx + dy * dy;
+                    if (distSq < MAX_DIST_SQ) {
+                        const alpha = 0.08 * (1 - Math.sqrt(distSq) / MAX_DIST);
+                        ctx.moveTo(pi.x, pi.y);
+                        ctx.lineTo(pj.x, pj.y);
+                        ctx.strokeStyle = 'rgba(180, 160, 255, ' + alpha + ')';
+                    }
                 }
             }
+            ctx.stroke();
         }
-        return linesDrawn;
+
+        function frame(timestamp) {
+            const dt = lastTime ? Math.min((timestamp - lastTime) / 16.667, 3) : 1;
+            lastTime = timestamp;
+            ctx.clearRect(0, 0, w, h);
+            for (const p of particles) p.update(dt), p.draw();
+            drawLines();
+            rafId = requestAnimationFrame(frame);
+        }
+
+        function start() {
+            if (running || document.hidden) return;
+            running = true;
+            lastTime = 0;
+            rafId = requestAnimationFrame(frame);
+        }
+        function stop() {
+            running = false;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+
+        resize();
+        for (let i = 0; i < COUNT; i++) particles.push(new Particle());
+        start();
+
+        window.addEventListener('resize', () => {
+            resize();
+            for (const p of particles) { p.x = Math.random() * w; p.y = Math.random() * h; }
+        });
+        document.addEventListener('visibilitychange', () => {
+            document.hidden ? stop() : start();
+        });
     }
 
-    let frameCount = 0;
-    function animate() {
-        ctx.clearRect(0, 0, w, h);
-        for (const p of particles) {
-            p.update();
-            p.draw();
+    /* ---------------------------------------------------------
+       2. 导航：滚动阴影 + 移动端菜单 + 滚动高亮
+       --------------------------------------------------------- */
+    function initNavigation() {
+        const nav = $('#nav');
+        const navToggle = $('#navToggle');
+        const navLinks = $('#navLinks');
+        const overlay = $('#mobileOverlay');
+        const navAnchors = $$('[data-nav]');
+
+        function setMenu(open) {
+            navLinks.classList.toggle('open', open);
+            navToggle.classList.toggle('active', open);
+            navToggle.setAttribute('aria-expanded', String(open));
+            overlay.classList.toggle('show', open);
+            document.body.style.overflow = open ? 'hidden' : '';
         }
-        const linesCount = drawLines();
-        
-        // 每 60 帧输出一次性能日志（约每秒一次）
-        frameCount++;
-        if (frameCount % 60 === 0) {
-            console.log(`[粒子系统] 性能数据 - 帧数: ${frameCount}, 连线数: ${linesCount}, 粒子数: ${particles.length}`);
+
+        // 滚动阴影
+        let ticking = false;
+        function onScrollNav() {
+            nav.classList.toggle('scrolled', window.scrollY > 20);
+            ticking = false;
         }
-        
-        requestAnimationFrame(animate);
-    }
-    animate();
-    console.log('[粒子系统] 动画循环已启动 ✅');
+        window.addEventListener('scroll', () => {
+            if (!ticking) { requestAnimationFrame(onScrollNav); ticking = true; }
+        }, { passive: true });
 
-    console.log('[粒子系统] 初始化完成 ✅');
-})();
+        navToggle.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
+        overlay.addEventListener('click', () => setMenu(false));
 
-// ============================================
-// 2. Navigation
-// ============================================
-console.log('[导航系统] 初始化导航组件...');
+        navAnchors.forEach(a => a.addEventListener('click', () => setMenu(false)));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') setMenu(false);
+        });
 
-const nav = document.getElementById('nav');
-const navToggle = document.getElementById('navToggle');
-const navLinks = document.getElementById('navLinks');
-const overlay = document.getElementById('mobileOverlay');
-const navAnchors = document.querySelectorAll('[data-nav]');
+        // 滚动高亮（Scrollspy）
+        const sectionIds = navAnchors.map(a => a.getAttribute('href').slice(1));
+        const sections = sectionIds
+            .map(id => document.getElementById(id))
+            .filter(Boolean);
 
-console.log('[导航系统] DOM 元素检查:', {
-    nav: !!nav,
-    navToggle: !!navToggle,
-    navLinks: !!navLinks,
-    overlay: !!overlay,
-    navAnchors: navAnchors.length
-});
+        if ('IntersectionObserver' in window && sections.length) {
+            const spy = new IntersectionObserver((entries) => {
+                const visible = entries
+                    .filter(e => e.isIntersecting)
+                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+                if (!visible.length) return;
+                const id = visible[0].target.id;
+                navAnchors.forEach(a => {
+                    a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+                });
+            }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
 
-let scrollTimeout;
-window.addEventListener('scroll', () => {
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        const isScrolled = window.scrollY > 20;
-        nav.classList.toggle('scrolled', isScrolled);
-        if (isScrolled) {
-            console.log('[导航系统] 页面滚动超过 20px，添加阴影效果');
-        } else {
-            console.log('[导航系统] 页面回到顶部，移除阴影效果');
-        }
-    }, 50);
-});
-
-function toggleMenu(open) {
-    const isOpen = open !== undefined ? open : !navLinks.classList.contains('open');
-    navLinks.classList.toggle('open', isOpen);
-    navToggle.classList.toggle('active', isOpen);
-    overlay.classList.toggle('show', isOpen);
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    
-    console.log(`[导航系统] 移动菜单 ${isOpen ? '打开' : '关闭'}`);
-}
-
-navToggle.addEventListener('click', () => {
-    console.log('[导航系统] 用户点击汉堡菜单按钮');
-    toggleMenu();
-});
-
-overlay.addEventListener('click', () => {
-    console.log('[导航系统] 用户点击遮罩层，关闭菜单');
-    toggleMenu(false);
-});
-
-navAnchors.forEach(a => {
-    a.addEventListener('click', () => {
-        const linkText = a.textContent.trim();
-        console.log(`[导航系统] 用户点击导航链接: "${linkText}"`);
-        
-        if (navLinks.classList.contains('open')) {
-            console.log('[导航系统] 移动端菜单已关闭');
-            toggleMenu(false);
-        }
-        
-        navAnchors.forEach(el => el.classList.remove('active'));
-        a.classList.add('active');
-        console.log(`[导航系统] 导航项 "${linkText}" 已激活`);
-    });
-});
-
-console.log('[导航系统] 导航组件初始化完成 ✅');
-
-// ============================================
-// 3. Reveal on Scroll (Intersection Observer)
-// ============================================
-console.log('[滚动动画] 初始化滚动显示动画...');
-
-const revealEls = document.querySelectorAll('.reveal');
-console.log(`[滚动动画] 找到 ${revealEls.length} 个需要动画的元素`);
-
-const observer = new IntersectionObserver((entries) => {
-    let visibleCount = 0;
-    for (const entry of entries) {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            visibleCount++;
-            const index = Array.from(revealEls).indexOf(entry.target);
-            console.log(`[滚动动画] 元素 #${index + 1} 进入视口，触发显示动画`);
+            sections.forEach(s => spy.observe(s));
         }
     }
-    if (visibleCount > 0) {
-        console.log(`[滚动动画] 本次有 ${visibleCount} 个元素显示`);
-    }
-}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
 
-revealEls.forEach((el, index) => {
-    observer.observe(el);
-    console.log(`[滚动动画] 已监听元素 #${index + 1}`);
-});
-
-console.log('[滚动动画] 滚动显示动画初始化完成 ✅');
-
-// ============================================
-// 4. Copy IP
-// ============================================
-console.log('[IP复制] 初始化 IP 复制功能...');
-
-const heroIpBox = document.getElementById('heroIpBox');
-const heroIpCopied = document.getElementById('heroIpCopied');
-const joinCopyBtn = document.getElementById('joinCopyBtn');
-
-console.log('[IP复制] DOM 元素检查:', {
-    heroIpBox: !!heroIpBox,
-    heroIpCopied: !!heroIpCopied,
-    joinCopyBtn: !!joinCopyBtn
-});
-
-function copyIp() {
-    const ip = 'mc.stalir.cn';
-    console.log(`[IP复制] 尝试复制 IP: "${ip}"`);
-    
-    if (navigator.clipboard) {
-        console.log('[IP复制] 使用 Clipboard API');
-        navigator.clipboard.writeText(ip)
-            .then(() => {
-                console.log('[IP复制] IP 复制成功 (Clipboard API) ✅');
-            })
-            .catch((err) => {
-                console.warn('[IP复制] Clipboard API 失败，使用降级方案', err);
-                fallbackCopy(ip);
+    /* ---------------------------------------------------------
+       3. 滚动显现动画
+       --------------------------------------------------------- */
+    function initReveal() {
+        const els = $$('.reveal');
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            els.forEach(el => el.classList.add('visible'));
+            return;
+        }
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
             });
-    } else {
-        console.log('[IP复制] Clipboard API 不可用，使用降级方案');
-        fallbackCopy(ip);
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+        els.forEach(el => observer.observe(el));
     }
-    
-    heroIpCopied.classList.add('show');
-    console.log('[IP复制] 显示 "已复制" 提示');
-    
-    setTimeout(() => {
-        heroIpCopied.classList.remove('show');
-        console.log('[IP复制] 隐藏 "已复制" 提示');
-    }, 2200);
-}
 
-function fallbackCopy(text) {
-    console.log('[IP复制] 使用降级方案 (textarea)');
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    
-    try {
-        document.execCommand('copy');
-        console.log('[IP复制] IP 复制成功 (降级方案) ✅');
-    } catch (err) {
-        console.error('[IP复制] 降级方案复制失败', err);
-    }
-    
-    document.body.removeChild(ta);
-}
+    /* ---------------------------------------------------------
+       4. IP 复制
+       --------------------------------------------------------- */
+    function initCopyIp() {
+        const heroIpBox = $('#heroIpBox');
+        const heroIpCopied = $('#heroIpCopied');
+        const joinCopyBtn = $('#joinCopyBtn');
+        let toastTimer = null;
 
-heroIpBox.addEventListener('click', () => {
-    console.log('[IP复制] 用户点击 IP 显示区域');
-    copyIp();
-});
-
-if (joinCopyBtn) {
-    joinCopyBtn.addEventListener('click', () => {
-        console.log('[IP复制] 用户点击加入区域的复制按钮');
-        copyIp();
-    });
-}
-
-console.log('[IP复制] IP 复制功能初始化完成 ✅');
-
-// ============================================
-// 5. Server Status (mcapi.us with fallback)
-// ============================================
-console.log('[服务器状态] 初始化服务器状态检测器...');
-
-const statusDot = document.getElementById('statusDot');
-const statusText = document.getElementById('statusText');
-const badge = document.getElementById('serverStatus');
-
-const STATUS = {
-    CHECKING: { text: '检测中...', cls: '', dot: 'spin' },
-    ONLINE: { text: '服务器在线', cls: 'online', dot: 'icon-check' },
-    OFFLINE: { text: '服务器离线', cls: 'offline', dot: 'icon-x' },
-    ERROR: { text: '状态获取失败', cls: 'api-error', dot: 'icon-x' }
-};
-
-console.log('[服务器状态] DOM 元素检查:', {
-    statusDot: !!statusDot,
-    statusText: !!statusText,
-    badge: !!badge
-});
-
-function setStatus(state) {
-    console.log(`[服务器状态] 设置状态为: ${state}`);
-    const s = STATUS[state] || STATUS.ERROR;
-    
-    console.log('[服务器状态] 状态配置:', {
-        state,
-        text: s.text,
-        cls: s.cls,
-        dot: s.dot
-    });
-    
-    badge.className = 'hero-badge ' + s.cls;
-    statusText.textContent = s.text;
-    statusDot.className = 'hero-badge-dot';
-    
-    if (s.dot === 'spin') {
-        statusDot.classList.add('spin');
-        console.log('[服务器状态] 添加旋转动画');
-    } else if (s.dot === 'icon-check') {
-        statusDot.classList.add('icon-check');
-        console.log('[服务器状态] 添加对勾图标');
-    } else if (s.dot === 'icon-x') {
-        statusDot.classList.add('icon-x');
-        console.log('[服务器状态] 添加叉号图标');
-    }
-    
-    if (state === 'ONLINE') {
-        statusDot.classList.add('pulse');
-        console.log('[服务器状态] 添加脉冲动画 (在线状态)');
-    }
-    
-    console.log(`[服务器状态] 状态更新完成: "${s.text}"`);
-}
-
-async function fetchFromMcApi() {
-    console.log('[服务器状态] [主 API] 开始获取服务器状态 (mcapi.us)...');
-    const startTime = Date.now();
-    
-    try {
-        const apiUrl = 'https://mcapi.us/server/status?ip=mc.stalir.cn&port=25565';
-        console.log(`[服务器状态] [主 API] 发起请求: ${apiUrl}`);
-        const resp = await fetch(apiUrl);
-        
-        console.log('[服务器状态] [主 API] 响应已接收:', {
-            status: resp.status,
-            statusText: resp.statusText,
-            ok: resp.ok,
-            耗时: `${Date.now() - startTime}ms`
-        });
-        
-        if (!resp.ok) {
-            console.warn(`[服务器状态] [主 API] 返回错误状态码: ${resp.status}`);
-            throw new Error(`API 错误: ${resp.status} ${resp.statusText}`);
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            ta.setAttribute('readonly', '');
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (_) { /* ignore */ }
+            document.body.removeChild(ta);
         }
-        
-        const data = await resp.json();
-        
-        // 获取时间戳
-        const lastUpdated = data.last_updated ? parseInt(data.last_updated) : null;
-        const timestamp = lastUpdated || Math.floor(Date.now() / 1000);
-        
-        console.log('[服务器状态] [主 API] 响应数据:', {
-            在线状态: data.online,
-            玩家数: data.players,
-            MOTD: data.motd?.clean || data.motd?.raw,
-            版本: data.version,
-            最后更新时间: lastUpdated ? new Date(lastUpdated * 1000).toLocaleString('zh-CN') : '未知',
-            时间戳: new Date().toISOString()
-        });
-        
-        return { 
-            online: data.online, 
-            source: 'mcapi.us',
-            timestamp: timestamp,
-            raw: data
-        };
-        
-    } catch (error) {
-        console.error('[服务器状态] [主 API] 获取失败:', {
-            错误信息: error.message,
-            耗时: `${Date.now() - startTime}ms`
-        });
-        throw error;
-    }
-}
 
-async function fetchFromMcSrvStat() {
-    console.log('[服务器状态] [备用 API] 开始获取服务器状态 (mcsrvstat.us)...');
-    const startTime = Date.now();
-    
-    try {
-        const apiUrl = 'https://api.mcsrvstat.us/3/mc.stalir.cn';
-        console.log(`[服务器状态] [备用 API] 发起请求: ${apiUrl}`);
-        const resp = await fetch(apiUrl, {
-            headers: {
-                'User-Agent': 'StalirServerStatus/1.0'
+        function copyIp() {
+            const ip = CONFIG.serverIP;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(ip).catch(() => fallbackCopy(ip));
+            } else {
+                fallbackCopy(ip);
             }
-        });
-        
-        console.log('[服务器状态] [备用 API] 响应已接收:', {
-            status: resp.status,
-            statusText: resp.statusText,
-            ok: resp.ok,
-            耗时: `${Date.now() - startTime}ms`
-        });
-        
-        if (!resp.ok) {
-            console.warn(`[服务器状态] [备用 API] 返回错误状态码: ${resp.status}`);
-            throw new Error(`备用 API 错误: ${resp.status} ${resp.statusText}`);
+
+            if (heroIpCopied) {
+                heroIpCopied.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => heroIpCopied.classList.remove('show'), 2000);
+            }
         }
-        
-        const data = await resp.json();
-        
-        // 获取缓存时间戳
-        const cacheTime = data.debug?.cachetime ? parseInt(data.debug.cachetime) : null;
-        const timestamp = cacheTime || Math.floor(Date.now() / 1000);
-        
-        console.log('[服务器状态] [备用 API] 响应数据:', {
-            在线状态: data.online,
-            玩家数: data.players ? `${data.players.online}/${data.players.max}` : '未知',
-            MOTD: data.motd?.clean?.[0] || data.motd?.raw?.[0] || '未知',
-            版本: data.version || '未知',
-            软件: data.software || '未知',
-            插件数: data.plugins ? data.plugins.length : '未知',
-            缓存时间: cacheTime ? new Date(cacheTime * 1000).toLocaleString('zh-CN') : '未知',
-            时间戳: new Date().toISOString()
-        });
-        
-        return { 
-            online: data.online, 
-            source: 'mcsrvstat.us',
-            timestamp: timestamp,
-            raw: data
-        };
-        
-    } catch (error) {
-        console.error('[服务器状态] [备用 API] 获取失败:', {
-            错误信息: error.message,
-            耗时: `${Date.now() - startTime}ms`
-        });
-        throw error;
-    }
-}
 
-function determineServerStatus(primaryResult, fallbackResult) {
-    console.log('[服务器状态] 开始综合判断服务器状态...');
-    
-    // 检查 API 是否返回了有效数据
-    const hasPrimary = primaryResult !== null && primaryResult !== undefined;
-    const hasFallback = fallbackResult !== null && fallbackResult !== undefined;
-    
-    console.log('[服务器状态] 数据可用性:', {
-        主API: hasPrimary ? '可用' : '不可用',
-        备用API: hasFallback ? '可用' : '不可用'
-    });
-    
-    // 情况1: 两个 API 都不可用
-    if (!hasPrimary && !hasFallback) {
-        console.log('[服务器状态] 所有 API 均不可用 ❌');
-        return { status: 'ERROR', reason: '所有 API 不可用' };
-    }
-    
-    // 情况2: 只有主 API 可用
-    if (hasPrimary && !hasFallback) {
-        console.log('[服务器状态] 只有主 API 可用，使用主 API 结果');
-        const status = primaryResult.online ? 'ONLINE' : 'OFFLINE';
-        return { 
-            status: status, 
-            reason: `主 API: ${primaryResult.online ? '在线' : '离线'}`,
-            source: 'mcapi.us',
-            timestamp: primaryResult.timestamp
+        const trigger = (el) => {
+            if (!el) return;
+            el.addEventListener('click', copyIp);
+            if (el === heroIpBox) {
+                el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyIp(); }
+                });
+            }
         };
+        trigger(heroIpBox);
+        trigger(joinCopyBtn);
     }
-    
-    // 情况3: 只有备用 API 可用
-    if (!hasPrimary && hasFallback) {
-        console.log('[服务器状态] 只有备用 API 可用，使用备用 API 结果');
-        const status = fallbackResult.online ? 'ONLINE' : 'OFFLINE';
-        return { 
-            status: status, 
-            reason: `备用 API: ${fallbackResult.online ? '在线' : '离线'}`,
-            source: 'mcsrvstat.us',
-            timestamp: fallbackResult.timestamp
-        };
+
+    /* ---------------------------------------------------------
+       5. 服务器状态检测（双 API + 玩家数 + 自动刷新）
+       --------------------------------------------------------- */
+    function initServerStatus() {
+        const badge = $('#serverStatus');
+        const statusDot = $('#statusDot');
+        const statusText = $('#statusText');
+        const badgeSep = $('#badgeSep');
+        const badgeMeta = $('#badgeMeta');
+        const statPlayers = $('#statPlayers');
+        if (!badge) return;
+
+        function setUI(state, meta) {
+            const map = {
+                checking: { cls: '', dot: 'spin', text: '检测中...' },
+                online: { cls: 'online', dot: 'icon-check', text: '服务器在线' },
+                offline: { cls: 'offline', dot: 'icon-x', text: '服务器离线' },
+                error: { cls: 'api-error', dot: 'icon-x', text: '状态获取失败' }
+            };
+            const s = map[state] || map.error;
+
+            badge.classList.remove('online', 'offline', 'api-error');
+            if (s.cls) badge.classList.add(s.cls);
+            statusText.textContent = s.text;
+            statusDot.className = 'hero-badge-dot ' + s.dot;
+
+            const hasMeta = state === 'online' && meta && meta.label;
+            if (badgeSep) badgeSep.hidden = !hasMeta;
+            if (badgeMeta) {
+                badgeMeta.hidden = !hasMeta;
+                if (hasMeta) badgeMeta.textContent = meta.label;
+            }
+            if (statPlayers) statPlayers.textContent = hasMeta ? meta.label : (state === 'online' ? '在线' : '—');
+        }
+
+        function readPlayers(raw) {
+            const p = raw && raw.players;
+            if (!p) return null;
+            if (typeof p === 'number') return { online: p, max: null };
+            const online = typeof p.online === 'number' ? p.online : (typeof p.now === 'number' ? p.now : null);
+            const max = typeof p.max === 'number' ? p.max : null;
+            if (online === null && max === null) return null;
+            return { online, max };
+        }
+
+        function formatPlayers(players) {
+            if (!players) return null;
+            const { online, max } = players;
+            if (online === null) return max !== null ? '/' + max : null;
+            return max !== null ? online + '/' + max : String(online);
+        }
+
+        async function fetchMcapi() {
+            const url = 'https://mcapi.us/server/status?ip=' + CONFIG.serverIP + '&port=' + CONFIG.serverPort;
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('mcapi.us ' + resp.status);
+            const data = await resp.json();
+            return {
+                online: !!data.online,
+                players: readPlayers(data),
+                timestamp: parseInt(data.last_updated, 10) || Math.floor(Date.now() / 1000),
+                version: (data.server && data.server.name) || null
+            };
+        }
+
+        async function fetchMcsrvstat() {
+            const url = 'https://api.mcsrvstat.us/3/' + CONFIG.serverIP;
+            const resp = await fetch(url, { headers: { 'User-Agent': 'StalirStatus/2.0' } });
+            if (!resp.ok) throw new Error('mcsrvstat ' + resp.status);
+            const data = await resp.json();
+            return {
+                online: !!data.online,
+                players: readPlayers(data),
+                timestamp: (data.debug && parseInt(data.debug.cachetime, 10)) || Math.floor(Date.now() / 1000),
+                version: data.version || null
+            };
+        }
+
+        async function fetchStatus() {
+            setUI('checking');
+            const [a, b] = await Promise.allSettled([fetchMcapi(), fetchMcsrvstat()]);
+            const results = [a, b]
+                .filter(r => r.status === 'fulfilled')
+                .map(r => r.value);
+
+            if (!results.length) { setUI('error'); return; }
+
+            // 优先采用时间戳更新的结果
+            results.sort((x, y) => y.timestamp - x.timestamp);
+            const best = results[0];
+
+            if (!best.online) { setUI('offline'); return; }
+
+            const label = formatPlayers(best.players);
+            setUI('online', { label });
+        }
+
+        setUI('checking');
+        fetchStatus();
+        setInterval(() => {
+            if (!document.hidden) fetchStatus();
+        }, CONFIG.statusRefreshInterval);
+
+        badge.addEventListener('click', fetchStatus);
     }
-    
-    // 情况4: 两个 API 都可用，比较时间戳
-    console.log('[服务器状态] 两个 API 都可用，比较时间戳...');
-    
-    const primaryTime = primaryResult.timestamp;
-    const fallbackTime = fallbackResult.timestamp;
-    const currentTime = Math.floor(Date.now() / 1000);
-    
-    // 计算时间差（秒）
-    const primaryAge = currentTime - primaryTime;
-    const fallbackAge = currentTime - fallbackTime;
-    
-    console.log('[服务器状态] 时间戳比较:', {
-        主API时间: new Date(primaryTime * 1000).toLocaleString('zh-CN'),
-        主API年龄: `${primaryAge}秒 (${(primaryAge / 60).toFixed(1)}分钟)`,
-        备用API时间: new Date(fallbackTime * 1000).toLocaleString('zh-CN'),
-        备用API年龄: `${fallbackAge}秒 (${(fallbackAge / 60).toFixed(1)}分钟)`,
-        时间差: `${Math.abs(primaryAge - fallbackAge)}秒`
-    });
-    
-    // 选择时间戳更近的数据（数值更大表示更近）
-    let selectedResult;
-    let selectedSource;
-    let selectedTime;
-    
-    if (primaryTime >= fallbackTime) {
-        selectedResult = primaryResult;
-        selectedSource = '主 API (mcapi.us)';
-        selectedTime = primaryTime;
-        console.log('[服务器状态] 选择主 API 数据 (时间戳更新)');
+
+    /* ---------------------------------------------------------
+       6. 插件卡片鼠标跟随光效
+       --------------------------------------------------------- */
+    function initCardGlow() {
+        if (prefersReducedMotion) return;
+        $$('.plugin-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                card.style.setProperty('--mouse-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+                card.style.setProperty('--mouse-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+            });
+        });
+    }
+
+    /* ---------------------------------------------------------
+       7. FAQ 折叠
+       --------------------------------------------------------- */
+    function initFaq() {
+        $$('.faq-item').forEach(item => {
+            const btn = $('.faq-question', item);
+            const answer = $('.faq-answer', item);
+            if (!btn || !answer) return;
+            btn.addEventListener('click', () => {
+                const isOpen = item.classList.toggle('open');
+                btn.setAttribute('aria-expanded', String(isOpen));
+                answer.style.maxHeight = isOpen ? answer.scrollHeight + 'px' : '0px';
+            });
+            // 窗口尺寸变化时校正展开项高度
+            window.addEventListener('resize', () => {
+                if (item.classList.contains('open')) answer.style.maxHeight = answer.scrollHeight + 'px';
+            });
+        });
+    }
+
+    /* ---------------------------------------------------------
+       8. 返回顶部
+       --------------------------------------------------------- */
+    function initBackToTop() {
+        const btn = $('#backToTop');
+        if (!btn) return;
+        let ticking = false;
+        function update() {
+            btn.classList.toggle('show', window.scrollY > 480);
+            ticking = false;
+        }
+        window.addEventListener('scroll', () => {
+            if (!ticking) { requestAnimationFrame(update); ticking = true; }
+        }, { passive: true });
+        btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }));
+    }
+
+    /* ---------------------------------------------------------
+       9. 整合包版本
+       --------------------------------------------------------- */
+    function initModpackVersion() {
+        const value = $('#modpackVersionValue');
+        if (!value) return;
+        if (!CONFIG.modpackVersionApi) return; // 保持「见 QQ 群」占位
+
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+
+        fetch(CONFIG.modpackVersionApi, { signal: ctrl.signal, headers: { Accept: 'application/vnd.github+json' } })
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(data => {
+                const tag = data && data.tag_name;
+                if (tag) value.textContent = 'v' + String(tag).replace(/^v/i, '');
+            })
+            .catch(() => { /* 失败时保持「见 QQ 群」 */ })
+            .finally(() => clearTimeout(timer));
+    }
+
+    /* ---------------------------------------------------------
+       启动
+       --------------------------------------------------------- */
+    function boot() {
+        initParticles();
+        initNavigation();
+        initReveal();
+        initCopyIp();
+        initServerStatus();
+        initCardGlow();
+        initFaq();
+        initBackToTop();
+        initModpackVersion();
+
+        // 轻量控制台签名（无刷屏日志）
+        console.info(
+            '%c Stalir %c 公益群组生存服 · mc.stalir.cn ',
+            'background:#6c3ce1;color:#fff;padding:2px 8px;border-radius:4px 0 0 4px;font-weight:700;',
+            'background:#0e0e18;color:#b8a0ff;padding:2px 8px;border-radius:0 4px 4px 0;'
+        );
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
     } else {
-        selectedResult = fallbackResult;
-        selectedSource = '备用 API (mcsrvstat.us)';
-        selectedTime = fallbackTime;
-        console.log('[服务器状态] 选择备用 API 数据 (时间戳更新)');
+        boot();
     }
-    
-    const status = selectedResult.online ? 'ONLINE' : 'OFFLINE';
-    console.log(`[服务器状态] 使用 ${selectedSource} 数据: ${selectedResult.online ? '在线 ✓' : '离线 ✗'}`);
-    
-    // 额外检查：如果两个 API 状态不一致，记录警告
-    if (primaryResult.online !== fallbackResult.online) {
-        console.warn('[服务器状态] ⚠️ 两个 API 返回的状态不一致:', {
-            主API: primaryResult.online ? '在线' : '离线',
-            备用API: fallbackResult.online ? '在线' : '离线',
-            使用数据: selectedSource
-        });
-    }
-    
-    return { 
-        status: status, 
-        reason: `使用 ${selectedSource} 数据 (时间戳: ${new Date(selectedTime * 1000).toLocaleString('zh-CN')})`,
-        source: selectedSource,
-        timestamp: selectedTime,
-        primaryOnline: primaryResult.online,
-        fallbackOnline: fallbackResult.online
-    };
-}
-
-async function fetchStatus() {
-    console.log('[服务器状态] 开始获取服务器状态 (双 API 验证)...');
-    const overallStart = Date.now();
-    
-    let primaryResult = null;
-    let fallbackResult = null;
-    
-    // 并行请求两个 API
-    console.log('[服务器状态] 并行请求主 API 和备用 API...');
-    const fetchPromises = [
-        fetchFromMcApi().then(result => {
-            primaryResult = result;
-            console.log('[服务器状态] 主 API 请求完成 ✅');
-        }).catch(error => {
-            console.warn('[服务器状态] 主 API 请求失败 ❌:', error.message);
-        }),
-        fetchFromMcSrvStat().then(result => {
-            fallbackResult = result;
-            console.log('[服务器状态] 备用 API 请求完成 ✅');
-        }).catch(error => {
-            console.warn('[服务器状态] 备用 API 请求失败 ❌:', error.message);
-        })
-    ];
-    
-    // 等待两个请求完成（或失败）
-    await Promise.allSettled(fetchPromises);
-    console.log('[服务器状态] 两个 API 请求均已完成');
-    
-    // 综合判断服务器状态
-    const decision = determineServerStatus(primaryResult, fallbackResult);
-    console.log('[服务器状态] 判断结果:', {
-        最终状态: decision.status,
-        数据来源: decision.source || '未知',
-        状态原因: decision.reason,
-        总耗时: `${Date.now() - overallStart}ms`
-    });
-    
-    if (decision.primaryOnline !== undefined && decision.fallbackOnline !== undefined) {
-        console.log('[服务器状态] 状态一致性:', {
-            主API: decision.primaryOnline ? '在线' : '离线',
-            备用API: decision.fallbackOnline ? '在线' : '离线',
-            是否一致: decision.primaryOnline === decision.fallbackOnline ? '是' : '否 ⚠️'
-        });
-    }
-    
-    setStatus(decision.status);
-    console.log(`[服务器状态] 最终状态: ${decision.status === 'ONLINE' ? '✅ 在线' : '❌ 离线/错误'}`);
-    console.log(`[服务器状态] 总耗时: ${Date.now() - overallStart}ms`);
-}
-
-console.log('[服务器状态] 开始初始状态检测...');
-setStatus('CHECKING');
-
-setTimeout(() => {
-    console.log('[服务器状态] 初始延迟 (400ms) 结束，开始获取状态...');
-    fetchStatus();
-}, 400);
-
-badge.addEventListener('click', () => {
-    console.log('[服务器状态] 用户点击状态徽章，手动刷新');
-    setStatus('CHECKING');
-    fetchStatus();
-});
-
-console.log('[服务器状态] 状态检测器初始化完成 ✅');
-
-// ============================================
-// 6. Plugin Card 鼠标跟随光效
-// ============================================
-console.log('[卡片特效] 初始化插件卡片鼠标跟随光效...');
-
-const pluginCards = document.querySelectorAll('.plugin-card');
-console.log(`[卡片特效] 找到 ${pluginCards.length} 个插件卡片`);
-
-pluginCards.forEach((card, index) => {
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        card.style.setProperty('--mouse-x', x + '%');
-        card.style.setProperty('--mouse-y', y + '%');
-    });
-    
-    card.addEventListener('mouseenter', () => {
-        console.log(`[卡片特效] 鼠标进入卡片 #${index + 1}`);
-    });
-    
-    card.addEventListener('mouseleave', () => {
-        console.log(`[卡片特效] 鼠标离开卡片 #${index + 1}`);
-    });
-});
-
-console.log('[卡片特效] 插件卡片光效初始化完成 ✅');
-
-// ============================================
-// 7. 页面加载完成
-// ============================================
-console.log('✨ Stalir — 公益群组生存服');
-console.log('=' .repeat(50));
-console.log('[系统] 所有组件初始化完成 ✅');
-console.log('[系统] 页面加载时间:', `${performance.now().toFixed(0)}ms`);
-console.log('[系统] 当前时间:', new Date().toLocaleString('zh-CN'));
-console.log('=' .repeat(50));
-
-// 页面完全加载后的性能报告
-window.addEventListener('load', () => {
-    console.log('[性能] 页面完全加载完成');
-    console.log('[性能] 总加载时间:', `${performance.now().toFixed(0)}ms`);
-    
-    // 输出内存使用情况（如果浏览器支持）
-    if (performance.memory) {
-        console.log('[性能] 内存使用:', {
-            已用: `${(performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-            总量: `${(performance.memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-            限制: `${(performance.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`
-        });
-    }
-});
-
-console.log('[系统] 脚本执行完成 🚀');
+})();
