@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stalir | 公益群组生存服</title>
+
+    <!-- SEO -->
+    <meta name="description" content="Stalir 公益群组生存服 — 死亡不掉落、跨服聊天、mcMMO 技能、经济市场与 221 款 Mod 的模组服。支持 1.13 ~ 26.2 版本任意加入。" />
+    <meta name="keywords" content="Minecraft,服务器,生存服,群组服,模组服,Stalir,mcMMO,CMI,TrChat,整合包" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="canonical" href="https://www.stalir.cn/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Stalir" />
+    <meta property="og:title" content="Stalir | 公益群组生存服" />
+    <meta property="og:description" content="死亡不掉落、跨服聊天、mcMMO 技能、经济市场，一个纯粹而丰富的 Minecraft 生存体验。支持 1.13 ~ 26.2 版本任意加入。" />
+    <meta property="og:url" content="https://www.stalir.cn/" />
+    <meta property="og:image" content="https://www.stalir.cn/logo.png" />
+    <meta property="og:locale" content="zh_CN" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Stalir | 公益群组生存服" />
+    <meta name="twitter:description" content="公益群组生存服 — 死亡不掉落、跨服聊天、mcMMO 技能、经济市场，支持 1.13 ~ 26.2 版本任意加入。" />
+    <meta name="twitter:image" content="https://www.stalir.cn/logo.png" />
+
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- 结构化数据：FAQ -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Stalir 服务器收费吗？",
+                "acceptedAnswer": { "@type": "Answer", "text": "不收费。Stalir 是公益服务器，所有玩法与功能均可免费体验，没有任何付费门槛。" }
+            },
+            {
+                "@type": "Question",
+                "name": "我该如何加入服务器？",
+                "acceptedAnswer": { "@type": "Answer", "text": "在 Minecraft Java 版多人游戏中输入服务器地址 mc.stalir.cn 即可加入，支持 1.13 ~ 26.2 版本。" }
+            },
+            {
+                "@type": "Question",
+                "name": "死亡后背包物品会掉落吗？",
+                "acceptedAnswer": { "@type": "Answer", "text": "不会。服务器开启了死亡不掉落，背包与经验都会完整保留，可以放心探索。" }
+            },
+            {
+                "@type": "Question",
+                "name": "模组服如何进入？",
+                "acceptedAnswer": { "@type": "Answer", "text": "模组服需要先从 QQ 群（655038860）下载整合包，使用整合包内置的启动器或配置即可进入。" }
+            },
+            {
+                "@type": "Question",
+                "name": "如何保护我的建筑与财产？",
+                "acceptedAnswer": { "@type": "Answer", "text": "使用 Dominion 领地系统圈地即可保护你的家园，防止他人破坏与偷窃。" }
+            },
+            {
+                "@type": "Question",
+                "name": "遇到问题该去哪里反馈？",
+                "acceptedAnswer": { "@type": "Answer", "text": "欢迎加入 QQ 交流群 655038860，或访问文档站 docs.stalir.cn 与杂谈版块寻求帮助。" }
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+
+    <a class="skip-link" href="#main">跳转到主要内容</a>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay" aria-hidden="true"></div>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav" aria-label="主导航">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo">
+                <img src="logo.png" alt="Stalir" class="nav-logo-img" width="34" height="34" />
+                Stalir
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#hero" class="active" data-nav>首页</a></li>
+                <li><a href="#features" data-nav>特色</a></li>
+                <li><a href="#plugins" data-nav>架构</a></li>
+                <li><a href="#modded" data-nav>模组</a></li>
+                <li><a href="#faq" data-nav>FAQ</a></li>
+                <li><a href="#join" data-nav>加入</a></li>
+                <li><a href="https://docs.stalir.cn/" target="_blank" rel="noopener noreferrer">文档</a></li>
+                <li><a href="https://forum.kxkl2024.cn/" target="_blank" rel="noopener noreferrer">杂谈</a></li>
+            </ul>
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单" aria-expanded="false" aria-controls="navLinks">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <main id="main">
+
+        <!-- Hero Section -->
+        <section class="hero" id="hero">
+            <div class="hero-inner">
+                <div class="hero-text">
+                    <button class="hero-badge reveal" id="serverStatus" role="status" aria-live="polite" title="点击刷新状态">
+                        <span class="hero-badge-dot spin" id="statusDot" aria-hidden="true"></span>
+                        <span id="statusText">检测中...</span>
+                        <span class="hero-badge-sep" id="badgeSep" hidden aria-hidden="true">·</span>
+                        <span class="hero-badge-meta" id="badgeMeta" hidden></span>
+                    </button>
+                    <h1 class="hero-name reveal reveal-d1">Stalir</h1>
+                    <p class="hero-tagline reveal reveal-d2">
+                        死亡不掉落 · 跨服聊天 · mcMMO 技能 · 经济市场
+                    </p>
+                    <p class="hero-tagline-sub reveal reveal-d2">
+                        公益群组生存服 — 一个纯粹而丰富的 Minecraft 生存体验，支持 <strong>1.13 ~ 26.2</strong> 版本任意加入。
+                    </p>
+                    <div class="reveal reveal-d3">
+                        <div class="hero-ip-box" id="heroIpBox" title="点击复制 IP 地址" role="button" tabindex="0">
+                            <span class="hero-ip-label">服务器地址</span>
+                            <span class="hero-ip-value">mc.stalir.cn</span>
+                            <span class="hero-ip-copy" aria-hidden="true">点击复制</span>
+                            <span class="hero-ip-copied" id="heroIpCopied" aria-live="polite">已复制到剪贴板</span>
+                        </div>
+                    </div>
+                    <div class="hero-actions reveal reveal-d3">
+                        <a href="#join" class="btn btn-brand">立即加入</a>
+                        <a href="https://qm.qq.com/q/RLmX2D9H6U" target="_blank" rel="noopener noreferrer" class="btn btn-alt">加入 QQ 群</a>
+                    </div>
+                </div>
+                <div class="hero-image reveal reveal-d3">
+                    <div class="hero-image-container">
+                        <img src="logo.png" alt="Stalir Logo" class="hero-image-logo" width="280" height="280" />
+                    </div>
+                </div>
+                <div class="hero-stats reveal reveal-d4">
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">1.13 – 26.2</span>
+                        <span class="hero-stat-label">支持版本</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" id="statPlayers">—</span>
+                        <span class="hero-stat-label">在线玩家</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">46</span>
+                        <span class="hero-stat-label">服务端插件</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">221</span>
+                        <span class="hero-stat-label">整合包 Mod</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="section" id="features">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <span class="section-label">为什么选择 Stalir</span>
+                    <h2 class="section-title">服务器特色</h2>
+                    <p class="section-subtitle">精心配置的群组生存服，为你提供稳定、有趣、便捷的游戏体验。</p>
+                </div>
+                <div class="features-grid">
+                    <article class="feature-card reveal reveal-d1">
+                        <h3>死亡不掉落</h3>
+                        <p>探险无忧，死亡后背包物品完整保留，大胆挑战任何地形和怪物。</p>
+                    </article>
+                    <article class="feature-card reveal reveal-d1">
+                        <h3>丰富指令支持</h3>
+                        <p>CMI 驱动全套基础指令：tpa、home、back、warp、spawn，操作便捷顺手。</p>
+                    </article>
+                    <article class="feature-card reveal reveal-d2">
+                        <h3>混合群组架构</h3>
+                        <p>Velocity 群组 + Paper + Fabric 混合后端，mcsmanager 面板管理，稳定高效。</p>
+                    </article>
+                    <article class="feature-card reveal reveal-d2">
+                        <h3>跨服聊天</h3>
+                        <p>TrChat 全服频道互通，无论在哪个子服，朋友的消息永不掉线。</p>
+                    </article>
+                    <article class="feature-card reveal reveal-d3">
+                        <h3>领地与商店</h3>
+                        <p>Dominion 领地系统保护你的家园，QuickShop-Hikari 便捷商店自由交易。</p>
+                    </article>
+                    <article class="feature-card reveal reveal-d3">
+                        <h3>菜单与签到</h3>
+                        <p>TrMenu 图形化菜单 + LiteSignIn 每日签到，功能一目了然，福利天天领。</p>
+                    </article>
+                    <article class="feature-card reveal reveal-d4">
+                        <h3>经济与市场</h3>
+                        <p>XConomy 跨服经济互通，SweetPlayerMarket 玩家市场自由买卖装备物资。</p>
+                    </article>
+                    <article class="feature-card reveal reveal-d4">
+                        <h3>跨服同步</h3>
+                        <p>HuskSync 驱动多子服背包/数据实时同步，无缝切换子服不掉进度。</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Plugins Section -->
+        <section class="section" id="plugins">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <span class="section-label">技术架构</span>
+                    <h2 class="section-title">服务端架构</h2>
+                    <p class="section-subtitle">Velocity 群组代理 + Paper 服务端核心 + Fabric Mod 加载器，搭配 Youer 与 Lophine 服务端，MCSManager 面板统一管理，46 款插件持续优化运行。</p>
+                </div>
+                <div class="plugins-grid">
+                    <a href="https://www.mcsmanager.com/" target="_blank" rel="noopener noreferrer" class="plugin-card reveal reveal-d1">
+                        <div class="plugin-card-header">
+                            <h4>MCSManager</h4>
+                            <span class="plugin-card-link" aria-hidden="true">›</span>
+                        </div>
+                        <p>开源网页端 Minecraft 服务器管理面板，多实例管理、Docker 支持、一键部署与监控。</p>
+                        <span class="plugin-card-tag">管理面板</span>
+                    </a>
+                    <a href="https://papermc.io/software/velocity" target="_blank" rel="noopener noreferrer" class="plugin-card reveal reveal-d1">
+                        <div class="plugin-card-header">
+                            <h4>Velocity</h4>
+                            <span class="plugin-card-link" aria-hidden="true">›</span>
+                        </div>
+                        <p>高性能 Minecraft 群组代理端，负责多子服间玩家路由、数据转发与负载均衡，低延迟高并发。</p>
+                        <span class="plugin-card-tag">代理端</span>
+                    </a>
+                    <a href="https://papermc.io/software/paper" target="_blank" rel="noopener noreferrer" class="plugin-card reveal reveal-d2">
+                        <div class="plugin-card-header">
+                            <h4>Paper</h4>
+                            <span class="plugin-card-link" aria-hidden="true">›</span>
+                        </div>
+                        <p>高性能 Bukkit/Spigot 分支服务端，兼容海量插件生态，优化红石、实体与区块性能。</p>
+                        <span class="plugin-card-tag">服务端核心</span>
+                    </a>
+                    <a href="https://fabricmc.net/" target="_blank" rel="noopener noreferrer" class="plugin-card reveal reveal-d2">
+                        <div class="plugin-card-header">
+                            <h4>Fabric</h4>
+                            <span class="plugin-card-link" aria-hidden="true">›</span>
+                        </div>
+                        <p>轻量级 Mod 加载器，支持高性能客户端与服务端 Mod，模块化设计灵活扩展。</p>
+                        <span class="plugin-card-tag">Mod 加载器</span>
+                    </a>
+                    <a href="https://www.mohistmc.cn/download/youer?v=1.21.1" target="_blank" rel="noopener noreferrer" class="plugin-card reveal reveal-d3">
+                        <div class="plugin-card-header">
+                            <h4>Youer</h4>
+                            <span class="plugin-card-link" aria-hidden="true">›</span>
+                        </div>
+                        <p>MohistMC 团队出品的高性能服务端，兼容 Bukkit/Spigot 插件生态，优化稳定流畅。</p>
+                        <span class="plugin-card-tag">服务端核心</span>
+                    </a>
+                    <a href="https://github.com/LophineCraft/Lophine" target="_blank" rel="noopener noreferrer" class="plugin-card reveal reveal-d3">
+                        <div class="plugin-card-header">
+                            <h4>Lophine</h4>
+                            <span class="plugin-card-link" aria-hidden="true">›</span>
+                        </div>
+                        <p>基于 Folia 的分支服务端，集成大量优化与可配置原版特性，专注在 Folia 上实现更多生电内容。</p>
+                        <span class="plugin-card-tag">服务端核心</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modded Server Section -->
+        <section class="section" id="modded">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <span class="section-label">模组生态</span>
+                    <h2 class="section-title">模组生存服</h2>
+                    <p class="section-subtitle">集成 Create 科技、探索冒险与 RPG 增强的深度模组体验。运行于 Youer + NeoForge，221 款 Mod。</p>
+                </div>
+                <div class="modpack-warning reveal reveal-d1">
+                    <span class="modpack-warning-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                            <path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM8 5a.75.75 0 00-.75.75v2.5a.75.75 0 001.5 0v-2.5A.75.75 0 008 5zm.75 5.75a.75.75 0 10-1.5 0 .75.75 0 001.5 0z"/>
+                        </svg>
+                    </span>
+                    <span>需从 QQ 群下载整合包方可进入游玩</span>
+                    <a class="modpack-version" id="modpackVersion" href="https://qm.qq.com/q/RLmX2D9H6U" target="_blank" rel="noopener noreferrer">
+                        整合包版本 <span class="modpack-version-value" id="modpackVersionValue">见 QQ 群</span>
+                    </a>
+                </div>
+                <div class="plugins-grid">
+                    <div class="plugin-card reveal reveal-d1">
+                        <div class="plugin-card-header">
+                            <h4>Create 科技线</h4>
+                        </div>
+                        <p>Create 核心机械自动化，搭配 CreateCasing、CreateBigCannons、CreateEnchantmentIndustry 等丰富扩展，从动力机械到火炮大炮。</p>
+                        <span class="plugin-card-tag">机械 · 自动化</span>
+                    </div>
+                    <div class="plugin-card reveal reveal-d1">
+                        <div class="plugin-card-header">
+                            <h4>农业与烹饪</h4>
+                        </div>
+                        <p>FarmersDelight 及其扩展 EndsDelight、MynethersDelight、MinersDelight，丰富的农作物与料理体系。</p>
+                        <span class="plugin-card-tag">农业 · 烹饪</span>
+                    </div>
+                    <div class="plugin-card reveal reveal-d2">
+                        <div class="plugin-card-header">
+                            <h4>世界探索</h4>
+                        </div>
+                        <p>Terralith、BiomesOPlenty、BiomesWevegone 拓展群系，YUNG's 系列优化遗迹结构，探索永无止境。</p>
+                        <span class="plugin-card-tag">地形 · 遗迹</span>
+                    </div>
+                    <div class="plugin-card reveal reveal-d2">
+                        <div class="plugin-card-header">
+                            <h4>存储与背包</h4>
+                        </div>
+                        <p>SophisticatedBackpacks 功能背包、StorageDrawers 抽屉存储、Tom's Storage 存储网络，整理收纳随心所欲。</p>
+                        <span class="plugin-card-tag">存储 · 整理</span>
+                    </div>
+                    <div class="plugin-card reveal reveal-d3">
+                        <div class="plugin-card-header">
+                            <h4>辅助工具</h4>
+                        </div>
+                        <p>EMI / JEI 合成表查询、AppleSkin 饱食度显示、Jade 方块信息、MapAtlases 地图导航，冒险必备工具集。</p>
+                        <span class="plugin-card-tag">辅助 · 信息</span>
+                    </div>
+                    <div class="plugin-card reveal reveal-d3">
+                        <div class="plugin-card-header">
+                            <h4>枪械模组</h4>
+                        </div>
+                        <p>Timeless & Classics Guns 现代枪械，搭配 TaczJS 脚本扩展，从手枪到狙击枪应有尽有。</p>
+                        <span class="plugin-card-tag">枪械 · 战斗</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="section" id="faq">
+            <div class="section-inner section-inner--narrow">
+                <div class="section-header reveal">
+                    <span class="section-label">常见问题</span>
+                    <h2 class="section-title">FAQ</h2>
+                    <p class="section-subtitle">关于加入与游玩 Stalir 的常见疑问，一网打尽。</p>
+                </div>
+                <div class="faq-list">
+                    <div class="faq-item reveal">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>Stalir 服务器收费吗？</span>
+                            <span class="faq-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="faq-answer"><p>不收费。Stalir 是公益服务器，所有玩法与功能均可免费体验，没有任何付费门槛。</p></div>
+                    </div>
+                    <div class="faq-item reveal">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>我该如何加入服务器？</span>
+                            <span class="faq-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="faq-answer"><p>在 Minecraft Java 版多人游戏中输入服务器地址 <code>mc.stalir.cn</code> 即可加入，支持 1.13 ~ 26.2 版本。</p></div>
+                    </div>
+                    <div class="faq-item reveal">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>死亡后背包物品会掉落吗？</span>
+                            <span class="faq-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="faq-answer"><p>不会。服务器开启了死亡不掉落，背包与经验都会完整保留，可以放心探索。</p></div>
+                    </div>
+                    <div class="faq-item reveal">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>模组服如何进入？</span>
+                            <span class="faq-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="faq-answer"><p>模组服需要先从 QQ 群（655038860）下载整合包，使用整合包内置的启动器或配置即可进入。</p></div>
+                    </div>
+                    <div class="faq-item reveal">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>如何保护我的建筑与财产？</span>
+                            <span class="faq-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="faq-answer"><p>使用 Dominion 领地系统圈地即可保护你的家园，防止他人破坏与偷窃。</p></div>
+                    </div>
+                    <div class="faq-item reveal">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>遇到问题该去哪里反馈？</span>
+                            <span class="faq-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="faq-answer"><p>欢迎加入 QQ 交流群 655038860，或访问文档站 <a href="https://docs.stalir.cn/" target="_blank" rel="noopener noreferrer">docs.stalir.cn</a> 与杂谈版块寻求帮助。</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Join Section -->
+        <section class="section" id="join">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <span class="section-label">加入我们</span>
+                    <h2 class="section-title">即刻启程</h2>
+                    <p class="section-subtitle">复制服务器地址，打开 Minecraft 即可加入。也欢迎加入 QQ 群获取最新消息。</p>
+                </div>
+                <div class="join-grid">
+                    <div class="join-card join-card-accent reveal reveal-d1">
+                        <div class="join-card-label">服务器地址</div>
+                        <div class="join-card-value">mc.stalir.cn</div>
+                        <div class="join-card-desc">Java 版 Minecraft，打开游戏直接输入地址即可加入</div>
+                        <button class="btn btn-brand" id="joinCopyBtn">复制 IP 地址</button>
+                    </div>
+                    <div class="join-card reveal reveal-d2">
+                        <div class="join-card-label">QQ 交流群</div>
+                        <div class="join-card-value">655038860</div>
+                        <div class="join-card-desc">获取服务器动态、活动通知、与更多玩家交流</div>
+                        <a href="https://qm.qq.com/q/RLmX2D9H6U" target="_blank" rel="noopener noreferrer" class="btn btn-alt">加入 QQ 群</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <p class="footer-text">&copy; 2026 <strong>Stalir</strong>. 公益群组生存服 — 持续更新中。</p>
+            <div class="footer-links">
+                <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">基于 MIT 协议开源发表</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to top -->
+    <button class="back-to-top" id="backToTop" aria-label="返回顶部">
+        <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M8 14a.75.75 0 01-.75-.75V3.06L4.53 5.78a.75.75 0 11-1.06-1.06l4-4a.75.75 0 011.06 0l4 4a.75.75 0 01-1.06 1.06L8.75 3.06v10.19A.75.75 0 018 14z"/>
+        </svg>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>
