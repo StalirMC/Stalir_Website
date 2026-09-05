@@ -25,123 +25,7 @@
     const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
     /* ---------------------------------------------------------
-       1. 粒子背景
-       --------------------------------------------------------- */
-    function initParticles() {
-        const canvas = $('#particles');
-        if (!canvas) return;
-        if (prefersReducedMotion) {
-            canvas.remove();
-            return;
-        }
-
-        const ctx = canvas.getContext('2d');
-        let w = 0;
-        let h = 0;
-        let rafId = null;
-        let running = false;
-
-        const COUNT = Math.min(70, Math.floor(window.innerWidth / 16));
-        const particles = [];
-        const MAX_DIST = 140;
-        const MAX_DIST_SQ = MAX_DIST * MAX_DIST;
-        let lastTime = 0;
-
-        function resize() {
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            w = window.innerWidth;
-            h = window.innerHeight;
-            canvas.width = w * dpr;
-            canvas.height = h * dpr;
-            canvas.style.width = w + 'px';
-            canvas.style.height = h + 'px';
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        }
-
-        class Particle {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * w;
-                this.y = Math.random() * h;
-                this.size = Math.random() * 1.8 + 0.4;
-                this.speedX = (Math.random() - 0.5) * 0.4;
-                this.speedY = (Math.random() - 0.5) * 0.4;
-                this.opacity = Math.random() * 0.45 + 0.08;
-            }
-            update(dt) {
-                this.x += this.speedX * dt;
-                this.y += this.speedY * dt;
-                // 边界反弹：归位 + 反向，防止粒子卡在角落
-                if (this.x < 0) { this.x = 0; this.speedX = Math.abs(this.speedX); }
-                else if (this.x > w) { this.x = w; this.speedX = -Math.abs(this.speedX); }
-                if (this.y < 0) { this.y = 0; this.speedY = Math.abs(this.speedY); }
-                else if (this.y > h) { this.y = h; this.speedY = -Math.abs(this.speedY); }
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(180, 160, 255, ' + this.opacity + ')';
-                ctx.fill();
-            }
-        }
-
-        function drawLines() {
-            ctx.lineWidth = 0.6;
-            ctx.beginPath();
-            for (let i = 0; i < particles.length; i++) {
-                const pi = particles[i];
-                for (let j = i + 1; j < particles.length; j++) {
-                    const pj = particles[j];
-                    const dx = pi.x - pj.x;
-                    const dy = pi.y - pj.y;
-                    const distSq = dx * dx + dy * dy;
-                    if (distSq < MAX_DIST_SQ) {
-                        const alpha = 0.08 * (1 - Math.sqrt(distSq) / MAX_DIST);
-                        ctx.moveTo(pi.x, pi.y);
-                        ctx.lineTo(pj.x, pj.y);
-                        ctx.strokeStyle = 'rgba(180, 160, 255, ' + alpha + ')';
-                    }
-                }
-            }
-            ctx.stroke();
-        }
-
-        function frame(timestamp) {
-            const dt = lastTime ? Math.min((timestamp - lastTime) / 16.667, 3) : 1;
-            lastTime = timestamp;
-            ctx.clearRect(0, 0, w, h);
-            for (const p of particles) p.update(dt), p.draw();
-            drawLines();
-            rafId = requestAnimationFrame(frame);
-        }
-
-        function start() {
-            if (running || document.hidden) return;
-            running = true;
-            lastTime = 0;
-            rafId = requestAnimationFrame(frame);
-        }
-        function stop() {
-            running = false;
-            if (rafId) cancelAnimationFrame(rafId);
-            rafId = null;
-        }
-
-        resize();
-        for (let i = 0; i < COUNT; i++) particles.push(new Particle());
-        start();
-
-        window.addEventListener('resize', () => {
-            resize();
-            for (const p of particles) { p.x = Math.random() * w; p.y = Math.random() * h; }
-        });
-        document.addEventListener('visibilitychange', () => {
-            document.hidden ? stop() : start();
-        });
-    }
-
-    /* ---------------------------------------------------------
-       2. 导航：滚动阴影 + 移动端菜单 + 滚动高亮
+       1. 导航：滚动阴影 + 移动端菜单 + 滚动高亮
        --------------------------------------------------------- */
     function initNavigation() {
         const nav = $('#nav');
@@ -449,7 +333,6 @@
        启动
        --------------------------------------------------------- */
     function boot() {
-        initParticles();
         initNavigation();
         initReveal();
         initCopyIp();
@@ -462,8 +345,8 @@
         // 轻量控制台签名（无刷屏日志）
         console.info(
             '%c Stalir %c 公益群组生存服 · mc.stalir.cn ',
-            'background:#6c3ce1;color:#fff;padding:2px 8px;border-radius:4px 0 0 4px;font-weight:700;',
-            'background:#0e0e18;color:#b8a0ff;padding:2px 8px;border-radius:0 4px 4px 0;'
+            'background:#0071e3;color:#fff;padding:2px 8px;border-radius:6px 0 0 6px;font-weight:700;',
+            'background:#000;color:#2997ff;padding:2px 8px;border-radius:0 6px 6px 0;'
         );
     }
 
